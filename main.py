@@ -1,5 +1,7 @@
+from assistant.cli.commands import run 
+
 def main():
-    print("Hello from cli-based-llm-tool!")
+    run()
 
 
 if __name__ == "__main__":
