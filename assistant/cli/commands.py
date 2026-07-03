@@ -7,6 +7,8 @@ import itertools
 import threading
 import sys
 import time
+import logging
+logger = logging.getLogger(__name__)
 
 def animate(loading: threading.Event):
     # Simple CLI animation, loading spinner
@@ -23,8 +25,9 @@ def run():
     # for now.
     
     # Initialize chat model
-    placeholder_model = "qwen3.5:9b"
-    chat_service = ChatService(model=placeholder_model)
+    use_model = "qwen3.5:9b"
+    logger.info("Initializing chat service with model =%s", use_model)
+    chat_service = ChatService(model=use_model)
     
     # Accept arguments from the user
     args = cli_parser()
@@ -33,20 +36,30 @@ def run():
     loading = threading.Event() 
 
     if args is None:
-        print("Please enter an argument")
+        logger.warning("No args provided by the user")
+        print("Please provide some input")
     else:
         # Starting another thread for thinking animation to not block the
         # main thread.
         thinking_thread = threading.Thread(target=animate, args=(loading,))
+        logger.debug("Starting spinner thread")
         thinking_thread.start()
+        
+        try:
+            for piece in chat_service.ask_streaming(args):
 
-        for piece in chat_service.ask_streaming(args):
+                # Handles the empty spaces in the cli with thinking animation
+                if piece != '':
+                    logger.debug("First token detected for stream, stopping spinner animation")
+                    loading.set() 
+                    thinking_thread.join()
 
-            # Handles the empty spaces in the cli with thinking animation
-            if piece != '':
-                loading.set() 
-                thinking_thread.join()
-
-            # Printing as a stream from LLM
-            print(piece, end='', flush=True)
+                # Printing as a stream from LLM
+                print(piece, end='', flush=True)
+        except Exception:
+            logger.exception("Error while streaming response from chat_service")
+            loading.set()
+            thinking_thread.join()
+            raise
         print("\n")
+        logger.info("Prompt responded to by chat_service")
