@@ -1,6 +1,8 @@
 import ollama
 import logging
+from assistant.providers.llm_provider import llm_provider
 # Provides a class to connect to ollama chat
+
 
 # Messages can have the role of system, user, assistant or tool
 # Lookup usage for each
@@ -8,10 +10,11 @@ import logging
 # Logging
 logger = logging.getLogger(__name__)
 
-class OllamaProvider:
+class OllamaProvider(llm_provider):
     def __init__(self, model_arg: str):
+        super().__init__(model_arg)
         logger.info("OllamaProvider initialized")
-        self.model_provided:str = model_arg
+#        self.model_provided:str = model_arg
 
     def chat_stream(self, user_prompt: str):
         # Connect to the model, send a message and get a respons

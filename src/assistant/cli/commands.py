@@ -63,3 +63,7 @@ def run():
             raise
         print("\n")
         logger.info("Prompt responded to by chat_service")
+        if thinking_thread.is_alive():
+            logger.error("Thinking thread never ended, which means the try and except both failed, probably an error")
+            loading.set()
+            thinking_thread.join()
